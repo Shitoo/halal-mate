@@ -10,7 +10,7 @@ export function DiscoverSection() {
               Discover All Halal Restaurants in Switzerland
             </h2>
             <p className="text-xl text-gray-600">
-              Halal Mate helps you find halal restaurants in Switzerland. No more wondering what to eat today, we've got you covered!
+              Halal Mate helps you find halal restaurants in Switzerland. No more wondering what to eat today, we&apos;ve got you covered!
             </p>
           </div>
           <div className="relative aspect-[4/3] rounded-lg overflow-hidden">

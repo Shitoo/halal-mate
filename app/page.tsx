@@ -11,12 +11,13 @@ import { Label } from "@/components/ui/label"
 import { CantonsList } from '@/components/CantonsList'
 import { Hero } from '@/components/Hero'
 import { StructuredData } from '@/components/StructuredData'
+import { Restaurant } from '@/data/restaurants'
 
 const RESTAURANTS_PER_PAGE = 12;
 
 export default function Home() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +43,7 @@ export default function Home() {
     try {
       const response = await fetch(`/api/restaurants?lat=${lat}&lng=${lng}`);
       if (response.ok) {
-        const data = await response.json();
+        const data: Restaurant[] = await response.json();
         setRestaurants(data);
       } else {
         throw new Error('Failed to fetch restaurants');

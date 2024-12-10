@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     } else {
       return NextResponse.json({ error: 'Failed to fetch place details' }, { status: 500 });
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'An error occurred' }, { status: 500 });
   }
 }

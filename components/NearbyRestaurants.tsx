@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { RestaurantCard } from './RestaurantCard'
-import { LocationServices } from './LocationServices'
+import { RestaurantCard } from '@/components/RestaurantCard'
+import { LocationServices } from '@/components/LocationServices'
+import { Restaurant } from '@/data/restaurants'
 
 interface NearbyRestaurantsProps {
-  restaurants: any[];
+  restaurants: Restaurant[];
   userLocation: { lat: number; lng: number } | null;
   onLocationUpdate: (location: { lat: number; lng: number }) => void;
   isLoading: boolean;
@@ -13,7 +14,7 @@ interface NearbyRestaurantsProps {
 }
 
 export function NearbyRestaurants({ restaurants, userLocation, onLocationUpdate, isLoading, error }: NearbyRestaurantsProps) {
-  const [nearbyRestaurants, setNearbyRestaurants] = useState<any[]>([]);
+  const [nearbyRestaurants, setNearbyRestaurants] = useState<Restaurant[]>([]);
 
   useEffect(() => {
     if (restaurants.length > 0) {

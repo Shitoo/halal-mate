@@ -6,8 +6,26 @@ import { Button } from "@/components/ui/button"
 import { MapPin, Clock, Navigation, Star } from 'lucide-react'
 import { calculateDistance } from '@/utils/distance'
 
+interface Restaurant {
+  place_id: string;
+  name: string;
+  vicinity: string;
+  geometry: {
+    location: {
+      lat: number;
+      lng: number;
+    };
+  };
+  opening_hours?: {
+    open_now: boolean;
+  };
+  rating?: number;
+  user_ratings_total?: number;
+  // Add other properties as needed
+}
+
 interface RestaurantCardProps {
-  restaurant: any;
+  restaurant: Restaurant;
   userLocation: { lat: number; lng: number } | null;
 }
 

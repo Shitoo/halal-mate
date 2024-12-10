@@ -38,7 +38,7 @@ export function HowItWorks() {
             </div>
             <h3 className="text-xl font-semibold mb-2">Enjoy Your Halal Food</h3>
             <p className="text-gray-600">
-              Visit the restaurant with confidence knowing it's 100% halal certified
+              Visit the restaurant with confidence knowing it&apos;s 100% halal certified
             </p>
           </div>
         </div>
