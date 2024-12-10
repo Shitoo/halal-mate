@@ -12,19 +12,28 @@ export async function GET(request: Request) {
   }
 
   try {
-    const result = await sql`
+    const result = await sql.query(`
       SELECT * FROM restaurants
-      WHERE city = ${city}
+      WHERE city = $1
         AND rating >= 4.0
         AND user_ratings_total >= 100
       ORDER BY rating DESC, user_ratings_total DESC
       LIMIT 20
-    `;
+    `, [city]);
+
+    console.log('SQL query executed successfully');
+    console.log('Number of results:', result.rows.length);
 
     return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Error fetching restaurants:', error);
-    return NextResponse.json({ error: 'An error occurred' }, { status: 500 });
+    
+    let errorMessage = 'An error occurred';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
+    return NextResponse.json({ error: 'An error occurred', details: errorMessage }, { status: 500 });
   }
 }
 
