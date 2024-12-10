@@ -23,11 +23,12 @@ interface GooglePlacesResponse {
   results: GooglePlacesResult[];
   status: string;
   error_message?: string;
+  next_page_token?: string;
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const radius = searchParams.get('radius') || '50000'; // Increased radius to cover more of Switzerland
+  const pageToken = searchParams.get('pageToken');
 
   // Define a bounding box for Switzerland
   const switzerlandBounds = {
@@ -48,7 +49,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'API key is not configured' }, { status: 500 });
   }
 
-  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${defaultLat},${defaultLng}&radius=${radius}&type=restaurant&keyword=halal&key=${apiKey}&bounds=${switzerlandBounds.south},${switzerlandBounds.west}|${switzerlandBounds.north},${switzerlandBounds.east}`;
+  let url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${defaultLat},${defaultLng}&radius=50000&type=restaurant&keyword=halal&key=${apiKey}&bounds=${switzerlandBounds.south},${switzerlandBounds.west}|${switzerlandBounds.north},${switzerlandBounds.east}`;
+
+  if (pageToken) {
+    url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${pageToken}&key=${apiKey}`;
+  }
 
   try {
     const response = await fetch(url);
@@ -64,7 +69,10 @@ export async function GET(request: Request) {
                lng >= switzerlandBounds.west && lng <= switzerlandBounds.east;
       });
       console.log('Returning restaurants in Switzerland:', switzerlandRestaurants);
-      return NextResponse.json(switzerlandRestaurants);
+      return NextResponse.json({
+        restaurants: switzerlandRestaurants,
+        nextPageToken: data.next_page_token
+      });
     } else if (data.status === 'ZERO_RESULTS') {
       return NextResponse.json({ message: 'No halal restaurants found in Switzerland' }, { status: 404 });
     } else {

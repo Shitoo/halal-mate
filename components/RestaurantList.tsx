@@ -5,6 +5,7 @@ import { RestaurantCard } from '@/components/RestaurantCard'
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PaginationControls } from '@/components/Pagination'
+import { Button } from "@/components/ui/button"
 
 interface Restaurant {
   place_id: string;
@@ -32,6 +33,8 @@ export function RestaurantList() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
     fetchRestaurants();
@@ -46,15 +49,20 @@ export function RestaurantList() {
     setCurrentPage(1);
   }, [searchTerm, restaurants]);
 
-  const fetchRestaurants = async () => {
+  const fetchRestaurants = async (pageToken?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/restaurants');
+      const url = pageToken ? `/api/restaurants?pageToken=${pageToken}` : '/api/restaurants';
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
-        setRestaurants(data);
-        setFilteredRestaurants(data);
+        if (pageToken) {
+          setRestaurants(prevRestaurants => [...prevRestaurants, ...data.restaurants]);
+        } else {
+          setRestaurants(data.restaurants);
+        }
+        setNextPageToken(data.nextPageToken);
       } else {
         throw new Error('Failed to fetch restaurants');
       }
@@ -63,6 +71,14 @@ export function RestaurantList() {
       console.error('Failed to fetch restaurants:', error);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  };
+
+  const loadMoreRestaurants = () => {
+    if (nextPageToken) {
+      setIsLoadingMore(true);
+      fetchRestaurants(nextPageToken);
     }
   };
 
@@ -105,6 +121,13 @@ export function RestaurantList() {
           totalPages={totalPages} 
           onPageChange={handlePageChange} 
         />
+      )}
+      {nextPageToken && (
+        <div className="flex justify-center mt-4">
+          <Button onClick={loadMoreRestaurants} disabled={isLoadingMore}>
+            {isLoadingMore ? 'Loading...' : 'Load More Restaurants'}
+          </Button>
+        </div>
       )}
     </div>
   );
