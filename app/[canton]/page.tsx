@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { restaurants, Restaurant } from '@/data/restaurants'
+import { restaurants } from '@/data/restaurants'
 import { RestaurantCard } from '@/components/RestaurantCard'
 import { Hero } from '@/components/Hero'
 import { CantonsList } from '@/components/CantonsList'
