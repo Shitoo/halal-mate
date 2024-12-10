@@ -21,7 +21,7 @@ interface Restaurant {
   user_ratings_total?: number;
 }
 
-const cities = ['Zurich', 'Geneva', 'Basel', 'Bern', 'Lausanne', 'Lucerne', 'St. Gallen', 'Winterthur', 'Lugano', 'Neuchâtel'];
+const cities = ['Zurich', 'Geneva', 'Lausanne', 'Neuchâtel', 'Fribourg', 'Basel', 'Bern', 'Lucerne', 'St. Gallen', 'Winterthur', 'Lugano'];
 
 export function RestaurantList() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);

@@ -28,14 +28,15 @@ interface GooglePlacesResponse {
 const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
   'Zurich': { lat: 47.3769, lng: 8.5417 },
   'Geneva': { lat: 46.2044, lng: 6.1432 },
+  'Lausanne': { lat: 46.5197, lng: 6.6323 },
+  'Neuchâtel': { lat: 46.9920, lng: 6.9311 },
+  'Fribourg': { lat: 46.8065, lng: 7.1615 },
   'Basel': { lat: 47.5596, lng: 7.5886 },
   'Bern': { lat: 46.9480, lng: 7.4474 },
-  'Lausanne': { lat: 46.5197, lng: 6.6323 },
   'Lucerne': { lat: 47.0502, lng: 8.3093 },
   'St. Gallen': { lat: 47.4245, lng: 9.3767 },
   'Winterthur': { lat: 47.5001, lng: 8.7501 },
-  'Lugano': { lat: 46.0037, lng: 8.9511 },
-  'Neuchâtel': { lat: 46.9920, lng: 6.9311 }
+  'Lugano': { lat: 46.0037, lng: 8.9511 }
 };
 
 export async function GET(request: Request) {
