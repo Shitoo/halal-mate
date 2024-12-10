@@ -31,7 +31,7 @@ export function RestaurantList() {
 
   useEffect(() => {
     fetchRestaurants(selectedCity);
-  }, []);
+  }, [selectedCity]);
 
   const fetchRestaurants = async (city: string) => {
     setIsLoading(true);
@@ -52,13 +52,17 @@ export function RestaurantList() {
     }
   };
 
+  const handleCityClick = (city: string) => {
+    setSelectedCity(city);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 mb-4">
         {cities.map((city) => (
           <Button
             key={city}
-            onClick={() => setSelectedCity(city)}
+            onClick={() => handleCityClick(city)}
             variant={selectedCity === city ? "default" : "outline"}
           >
             {city}
@@ -67,7 +71,7 @@ export function RestaurantList() {
       </div>
       {isLoading && <p>Loading halal restaurants in {selectedCity}...</p>}
       {error && <p className="text-red-500">{error}</p>}
-      {!isLoading && !error && restaurants.length === 0 && selectedCity && (
+      {!isLoading && !error && restaurants.length === 0 && (
         <p>No halal restaurants found in {selectedCity}.</p>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
