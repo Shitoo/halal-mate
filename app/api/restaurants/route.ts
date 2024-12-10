@@ -4,15 +4,17 @@ export const runtime = 'edge';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const lat = searchParams.get('lat');
-  const lng = searchParams.get('lng');
+  let lat = searchParams.get('lat');
+  let lng = searchParams.get('lng');
   const radius = searchParams.get('radius') || '5000'; // Default 5km radius
 
-  console.log('Fetching restaurants with params:', { lat, lng, radius });
-
+  // Default to a location in Switzerland (e.g., Zurich) if no location is provided
   if (!lat || !lng) {
-    return NextResponse.json({ error: 'Latitude and longitude are required' }, { status: 400 });
+    lat = '47.3769'; // Zurich latitude
+    lng = '8.5417'; // Zurich longitude
   }
+
+  console.log('Fetching restaurants with params:', { lat, lng, radius });
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey) {

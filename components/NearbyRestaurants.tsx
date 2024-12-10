@@ -32,16 +32,17 @@ export function NearbyRestaurants({ userLocation, onLocationUpdate }: NearbyRest
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (userLocation) {
-      fetchRestaurants(userLocation.lat, userLocation.lng);
-    }
+    fetchRestaurants();
   }, [userLocation]);
 
-  const fetchRestaurants = async (lat: number, lng: number) => {
+  const fetchRestaurants = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/restaurants?lat=${lat}&lng=${lng}`);
+      const url = userLocation
+        ? `/api/restaurants?lat=${userLocation.lat}&lng=${userLocation.lng}`
+        : '/api/restaurants';
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         setRestaurants(data);
@@ -56,21 +57,14 @@ export function NearbyRestaurants({ userLocation, onLocationUpdate }: NearbyRest
     }
   };
 
-  if (!userLocation) {
-    return <LocationServices onLocationUpdate={onLocationUpdate} />;
-  }
-
-  if (isLoading) {
-    return <p>Loading nearby restaurants...</p>;
-  }
-
-  if (error) {
-    return <p className="text-red-500">{error}</p>;
-  }
-
   return (
     <div className="space-y-4">
       <LocationServices onLocationUpdate={onLocationUpdate} />
+      {isLoading && <p>Loading restaurants...</p>}
+      {error && <p className="text-red-500">{error}</p>}
+      {!isLoading && !error && restaurants.length === 0 && (
+        <p>No restaurants found. Try adjusting your location or search radius.</p>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {restaurants.map((restaurant) => (
           <RestaurantCard key={restaurant.place_id} restaurant={restaurant} userLocation={userLocation} />

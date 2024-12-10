@@ -30,7 +30,7 @@ export default function Home() {
       />
       <div className="container mx-auto px-4 py-8 flex-grow">
         <section id="nearby-halal-spots" className="mb-12">
-          <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-black">Nearby Halal Restaurants</h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-black">Halal Restaurants in Switzerland</h2>
           <NearbyRestaurants 
             userLocation={userLocation} 
             onLocationUpdate={handleLocationUpdate}
