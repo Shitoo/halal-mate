@@ -27,13 +27,11 @@ export function RestaurantList() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string>('Zurich');
 
   useEffect(() => {
-    if (selectedCity) {
-      fetchRestaurants(selectedCity);
-    }
-  }, [selectedCity]);
+    fetchRestaurants(selectedCity);
+  }, []);
 
   const fetchRestaurants = async (city: string) => {
     setIsLoading(true);

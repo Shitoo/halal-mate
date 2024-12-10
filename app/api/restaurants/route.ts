@@ -55,7 +55,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'API key is not configured' }, { status: 500 });
   }
 
-  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=10000&type=restaurant&keyword=halal&key=${apiKey}&rankby=prominence`;
+  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=10000&type=restaurant&keyword=halal&key=${apiKey}&rankby=prominence&maxresults=60`;
 
   try {
     const response = await fetch(url);
@@ -64,6 +64,7 @@ export async function GET(request: Request) {
 
     if (data.status === 'OK') {
       const sortedRestaurants = data.results
+        .filter(restaurant => (restaurant.rating || 0) >= 4.0)
         .sort((a, b) => {
           if (b.rating !== a.rating) {
             return (b.rating || 0) - (a.rating || 0);
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
         })
         .slice(0, 20);
 
-      console.log(`Returning top 20 halal restaurants in ${city}`);
+      console.log(`Returning top rated halal restaurants in ${city}`);
       return NextResponse.json(sortedRestaurants);
     } else if (data.status === 'ZERO_RESULTS') {
       return NextResponse.json({ message: `No halal restaurants found in ${city}` }, { status: 404 });
