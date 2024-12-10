@@ -26,7 +26,7 @@ export function StructuredData({ restaurants }: StructuredDataProps) {
           "latitude": restaurant.lat,
           "longitude": restaurant.lng
         },
-        "url": `https://halal-mate.ch/restaurant/${restaurant.id}`,
+        "url": `https://halal-mate.com/restaurant/${restaurant.id}`,
         "telephone": "+41000000000", // Replace with actual phone number if available
         "servesCuisine": "Halal",
         "openingHours": restaurant.openingHours

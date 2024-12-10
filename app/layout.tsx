@@ -9,6 +9,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Halal Mate - Find Halal Restaurants in Switzerland',
   description: 'Discover authentic Halal restaurants across Switzerland with Halal Mate.',
+  metadataBase: new URL('https://halal-mate.com'),
 }
 
 export default function RootLayout({

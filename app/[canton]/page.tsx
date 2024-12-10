@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `Halal Restaurants in ${formattedCanton} | Halal Mate`,
       description: `Find authentic Halal restaurants in ${formattedCanton}, Switzerland with Halal Mate.`,
-      url: `https://halal-mate.ch/${canton}`,
+      url: `https://halal-mate.com/${canton}`,
       siteName: 'Halal Mate',
       images: [
         {
