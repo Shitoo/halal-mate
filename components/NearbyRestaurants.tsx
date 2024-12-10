@@ -3,24 +3,58 @@
 import { useState, useEffect } from 'react'
 import { RestaurantCard } from '@/components/RestaurantCard'
 import { LocationServices } from '@/components/LocationServices'
-import { Restaurant } from '@/data/restaurants'
 
-interface NearbyRestaurantsProps {
-  restaurants: Restaurant[];
-  userLocation: { lat: number; lng: number } | null;
-  onLocationUpdate: (location: { lat: number; lng: number }) => void;
-  isLoading: boolean;
-  error: string | null;
+interface Restaurant {
+  place_id: string;
+  name: string;
+  vicinity: string;
+  geometry: {
+    location: {
+      lat: number;
+      lng: number;
+    };
+  };
+  opening_hours?: {
+    open_now: boolean;
+  };
+  rating?: number;
+  user_ratings_total?: number;
 }
 
-export function NearbyRestaurants({ restaurants, userLocation, onLocationUpdate, isLoading, error }: NearbyRestaurantsProps) {
-  const [nearbyRestaurants, setNearbyRestaurants] = useState<Restaurant[]>([]);
+interface NearbyRestaurantsProps {
+  userLocation: { lat: number; lng: number } | null;
+  onLocationUpdate: (location: { lat: number; lng: number }) => void;
+}
+
+export function NearbyRestaurants({ userLocation, onLocationUpdate }: NearbyRestaurantsProps) {
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (restaurants.length > 0) {
-      setNearbyRestaurants(restaurants.slice(0, 10));
+    if (userLocation) {
+      fetchRestaurants(userLocation.lat, userLocation.lng);
     }
-  }, [restaurants]);
+  }, [userLocation]);
+
+  const fetchRestaurants = async (lat: number, lng: number) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/restaurants?lat=${lat}&lng=${lng}`);
+      if (response.ok) {
+        const data = await response.json();
+        setRestaurants(data);
+      } else {
+        throw new Error('Failed to fetch restaurants');
+      }
+    } catch (error) {
+      setError('Failed to fetch restaurants. Please try again later.');
+      console.error('Failed to fetch restaurants:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!userLocation) {
     return <LocationServices onLocationUpdate={onLocationUpdate} />;
@@ -38,7 +72,7 @@ export function NearbyRestaurants({ restaurants, userLocation, onLocationUpdate,
     <div className="space-y-4">
       <LocationServices onLocationUpdate={onLocationUpdate} />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {nearbyRestaurants.map((restaurant) => (
+        {restaurants.map((restaurant) => (
           <RestaurantCard key={restaurant.place_id} restaurant={restaurant} userLocation={userLocation} />
         ))}
       </div>

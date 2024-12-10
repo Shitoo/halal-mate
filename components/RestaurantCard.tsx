@@ -21,7 +21,6 @@ interface Restaurant {
   };
   rating?: number;
   user_ratings_total?: number;
-  // Add other properties as needed
 }
 
 interface RestaurantCardProps {
