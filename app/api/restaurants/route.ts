@@ -12,6 +12,8 @@ export async function GET(request: Request) {
   }
 
   try {
+    console.log('Fetching restaurants for city:', city);
+    
     const result = await sql.query(`
       SELECT * FROM restaurants
       WHERE city = $1
@@ -21,8 +23,17 @@ export async function GET(request: Request) {
       LIMIT 20
     `, [city]);
 
-    console.log('SQL query executed successfully');
-    console.log('Number of results:', result.rows.length);
+    console.log('Query executed successfully');
+    console.log('Results found:', result.rows.length);
+
+    if (result.rows.length === 0) {
+      console.log('No restaurants found for city:', city);
+      return NextResponse.json({ 
+        message: 'No restaurants found',
+        city: city,
+        results: []
+      });
+    }
 
     return NextResponse.json(result.rows);
   } catch (error) {
@@ -33,7 +44,11 @@ export async function GET(request: Request) {
       errorMessage = error.message;
     }
     
-    return NextResponse.json({ error: 'An error occurred', details: errorMessage }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to fetch restaurants',
+      details: errorMessage,
+      city: city
+    }, { status: 500 });
   }
 }
 
