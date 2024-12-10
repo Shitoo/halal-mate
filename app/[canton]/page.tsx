@@ -62,7 +62,6 @@ export default async function CantonPage({ params }: Props) {
               <RestaurantCard 
                 key={restaurant.id} 
                 restaurant={restaurant} 
-                userLocation={null}
               />
             ))}
           </div>

@@ -1,10 +1,6 @@
-'use client'
-
-import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { MapPin, Clock, Navigation, Star } from 'lucide-react'
-import { calculateDistance } from '@/utils/distance'
+import { MapPin, Clock, Star } from 'lucide-react'
 
 interface Restaurant {
   place_id: string;
@@ -25,32 +21,9 @@ interface Restaurant {
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
-  userLocation: { lat: number; lng: number } | null;
 }
 
-export function RestaurantCard({ restaurant, userLocation }: RestaurantCardProps) {
-  const [distance, setDistance] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (userLocation) {
-      const dist = calculateDistance(
-        userLocation.lat,
-        userLocation.lng,
-        restaurant.geometry.location.lat,
-        restaurant.geometry.location.lng
-      );
-      setDistance(dist);
-    }
-  }, [userLocation, restaurant]);
-
-  const formatDistance = (distance: number | null) => {
-    if (distance === null) return 'Distance unknown';
-    if (distance < 1) {
-      return `${(distance * 1000).toFixed(0)} m`;
-    }
-    return `${distance.toFixed(1)} km`;
-  };
-
+export function RestaurantCard({ restaurant }: RestaurantCardProps) {
   return (
     <Card className="w-full">
       <CardHeader>
@@ -65,12 +38,6 @@ export function RestaurantCard({ restaurant, userLocation }: RestaurantCardProps
           <div className="flex items-center mb-2">
             <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
             <p>{restaurant.opening_hours.open_now ? 'Open now' : 'Closed'}</p>
-          </div>
-        )}
-        {distance !== null && (
-          <div className="flex items-center mb-2">
-            <Navigation className="w-4 h-4 mr-2 flex-shrink-0" />
-            <p>{formatDistance(distance)}</p>
           </div>
         )}
         {restaurant.rating && (
