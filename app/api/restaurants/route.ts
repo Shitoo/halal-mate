@@ -23,37 +23,39 @@ interface GooglePlacesResponse {
   results: GooglePlacesResult[];
   status: string;
   error_message?: string;
-  next_page_token?: string;
 }
+
+const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
+  'Zurich': { lat: 47.3769, lng: 8.5417 },
+  'Geneva': { lat: 46.2044, lng: 6.1432 },
+  'Basel': { lat: 47.5596, lng: 7.5886 },
+  'Bern': { lat: 46.9480, lng: 7.4474 },
+  'Lausanne': { lat: 46.5197, lng: 6.6323 },
+  'Lucerne': { lat: 47.0502, lng: 8.3093 },
+  'St. Gallen': { lat: 47.4245, lng: 9.3767 },
+  'Winterthur': { lat: 47.5001, lng: 8.7501 },
+  'Lugano': { lat: 46.0037, lng: 8.9511 },
+  'Neuchâtel': { lat: 46.9920, lng: 6.9311 }
+};
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const pageToken = searchParams.get('pageToken');
+  const city = searchParams.get('city');
 
-  // Define a bounding box for Switzerland
-  const switzerlandBounds = {
-    south: 45.8179,
-    west: 5.9559,
-    north: 47.8084,
-    east: 10.4923
-  };
+  if (!city || !cityCoordinates[city]) {
+    return NextResponse.json({ error: 'Invalid city' }, { status: 400 });
+  }
 
-  // Use the center of Switzerland as the default location
-  const defaultLat = (switzerlandBounds.north + switzerlandBounds.south) / 2;
-  const defaultLng = (switzerlandBounds.east + switzerlandBounds.west) / 2;
+  const { lat, lng } = cityCoordinates[city];
 
-  console.log('Fetching restaurants within Switzerland');
+  console.log(`Fetching halal restaurants in ${city}`);
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'API key is not configured' }, { status: 500 });
   }
 
-  let url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${defaultLat},${defaultLng}&radius=50000&type=restaurant&keyword=halal&key=${apiKey}&bounds=${switzerlandBounds.south},${switzerlandBounds.west}|${switzerlandBounds.north},${switzerlandBounds.east}`;
-
-  if (pageToken) {
-    url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${pageToken}&key=${apiKey}`;
-  }
+  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=10000&type=restaurant&keyword=halal&key=${apiKey}&rankby=prominence`;
 
   try {
     const response = await fetch(url);
@@ -61,20 +63,19 @@ export async function GET(request: Request) {
     console.log('Google Places API response:', data);
 
     if (data.status === 'OK') {
-      // Filter results to ensure they are within Switzerland
-      const switzerlandRestaurants = data.results.filter((restaurant: GooglePlacesResult) => {
-        const lat = restaurant.geometry.location.lat;
-        const lng = restaurant.geometry.location.lng;
-        return lat >= switzerlandBounds.south && lat <= switzerlandBounds.north &&
-               lng >= switzerlandBounds.west && lng <= switzerlandBounds.east;
-      });
-      console.log('Returning restaurants in Switzerland:', switzerlandRestaurants);
-      return NextResponse.json({
-        restaurants: switzerlandRestaurants,
-        nextPageToken: data.next_page_token
-      });
+      const sortedRestaurants = data.results
+        .sort((a, b) => {
+          if (b.rating !== a.rating) {
+            return (b.rating || 0) - (a.rating || 0);
+          }
+          return (b.user_ratings_total || 0) - (a.user_ratings_total || 0);
+        })
+        .slice(0, 20);
+
+      console.log(`Returning top 20 halal restaurants in ${city}`);
+      return NextResponse.json(sortedRestaurants);
     } else if (data.status === 'ZERO_RESULTS') {
-      return NextResponse.json({ message: 'No halal restaurants found in Switzerland' }, { status: 404 });
+      return NextResponse.json({ message: `No halal restaurants found in ${city}` }, { status: 404 });
     } else {
       console.error('Places API error:', data.status, data.error_message);
       return NextResponse.json({ error: 'Failed to fetch restaurants' }, { status: 500 });

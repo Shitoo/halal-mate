@@ -1,7 +1,6 @@
 import { RestaurantList } from '@/components/RestaurantList'
 import { DiscoverSection } from '@/components/DiscoverSection'
 import { HowItWorks } from '@/components/HowItWorks'
-import { CantonsList } from '@/components/CantonsList'
 import { Hero } from '@/components/Hero'
 
 export default function Home() {
@@ -19,7 +18,6 @@ export default function Home() {
 
         <DiscoverSection />
         <HowItWorks />
-        <CantonsList currentCanton={null} />
       </div>
     </div>
   )
