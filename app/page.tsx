@@ -1,4 +1,4 @@
-import { NearbyRestaurants } from '@/components/NearbyRestaurants'
+import { RestaurantList } from '@/components/RestaurantList'
 import { DiscoverSection } from '@/components/DiscoverSection'
 import { HowItWorks } from '@/components/HowItWorks'
 import { CantonsList } from '@/components/CantonsList'
@@ -14,7 +14,7 @@ export default function Home() {
       <div className="container mx-auto px-4 py-8 flex-grow">
         <section id="halal-restaurants-switzerland" className="mb-12">
           <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-black">Halal Restaurants in Switzerland</h2>
-          <NearbyRestaurants />
+          <RestaurantList />
         </section>
 
         <DiscoverSection />
