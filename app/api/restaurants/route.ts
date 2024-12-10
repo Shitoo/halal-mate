@@ -64,7 +64,7 @@ export async function GET(request: Request) {
 
     if (data.status === 'OK') {
       const sortedRestaurants = data.results
-        .filter(restaurant => (restaurant.rating || 0) >= 4.0)
+        .filter(restaurant => (restaurant.rating || 0) >= 4.0 && (restaurant.user_ratings_total || 0) >= 100)
         .sort((a, b) => {
           if (b.rating !== a.rating) {
             return (b.rating || 0) - (a.rating || 0);
