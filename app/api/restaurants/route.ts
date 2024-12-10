@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 
+export const runtime = 'edge';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const lat = searchParams.get('lat');
   const lng = searchParams.get('lng');
   const radius = searchParams.get('radius') || '5000'; // Default 5km radius
+
+  console.log('Fetching restaurants with params:', { lat, lng, radius });
 
   if (!lat || !lng) {
     return NextResponse.json({ error: 'Latitude and longitude are required' }, { status: 400 });
@@ -20,8 +24,10 @@ export async function GET(request: Request) {
   try {
     const response = await fetch(url);
     const data = await response.json();
+    console.log('Google Places API response:', data);
 
     if (data.status === 'OK') {
+      console.log('Returning restaurants:', data.results);
       return NextResponse.json(data.results);
     } else if (data.status === 'ZERO_RESULTS') {
       return NextResponse.json({ message: 'No restaurants found' }, { status: 404 });
