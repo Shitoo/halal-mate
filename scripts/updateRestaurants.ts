@@ -8,39 +8,102 @@ interface PlacesApiResponse {
   next_page_token?: string;
 }
 
+interface Restaurant {
+  place_id: string;
+  name: string;
+  vicinity: string;
+  geometry: {
+    location: {
+      lat: number;
+      lng: number;
+    };
+  };
+  rating: number;
+  user_ratings_total: number;
+  score?: number;
+}
+
 const cityCoordinates: { [key: string]: { lat: number; lng: number } } = {
   'Zurich': { lat: 47.3769, lng: 8.5417 },
   'Geneva': { lat: 46.2044, lng: 6.1432 },
-  'Lausanne': { lat: 46.5197, lng: 6.6323 },
-  'Neuchâtel': { lat: 46.9920, lng: 6.9311 },
-  'Fribourg': { lat: 46.8065, lng: 7.1615 },
   'Basel': { lat: 47.5596, lng: 7.5886 },
   'Bern': { lat: 46.9480, lng: 7.4474 },
-  'Lucerne': { lat: 47.0502, lng: 8.3093 },
-  'St. Gallen': { lat: 47.4245, lng: 9.3767 },
-  'Winterthur': { lat: 47.5001, lng: 8.7501 },
-  'Lugano': { lat: 46.0037, lng: 8.9511 }
+  'Lausanne': { lat: 46.5197, lng: 6.6323 },
 };
 
-async function fetchRestaurants(url: string): Promise<any[]> {
-  const response = await fetch(url);
-  const data = await response.json() as PlacesApiResponse;
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  if (data.status !== 'OK') {
-    console.error('Places API error:', data.status, data.error_message);
+function isHalalRestaurant(restaurant: any): boolean {
+  const name = restaurant.name.toLowerCase();
+  const types = restaurant.types || [];
+  return name.includes('halal') || types.includes('halal_restaurant');
+}
+
+async function fetchRestaurants(url: string, retries = 3): Promise<any[]> {
+  console.log(`Fetching halal restaurants from URL: ${url}`);
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+    
+    try {
+      const data = JSON.parse(text) as PlacesApiResponse;
+      
+      if (data.status !== 'OK') {
+        console.error('Places API error:', data.status, data.error_message);
+        return [];
+      }
+
+      let results = data.results.filter(isHalalRestaurant);
+
+      if (data.next_page_token) {
+        await delay(2000); // Wait 2 seconds before the next request
+        const nextPageUrl = `${url}&pagetoken=${data.next_page_token}`;
+        const nextPageResults = await fetchRestaurants(nextPageUrl);
+        results = results.concat(nextPageResults);
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+      console.error('Raw response:', text);
+      if (retries > 0) {
+        console.log(`Retrying... (${retries} attempts left)`);
+        await delay(2000);
+        return fetchRestaurants(url, retries - 1);
+      }
+      return [];
+    }
+  } catch (error) {
+    console.error('Fetch error:', error);
+    if (retries > 0) {
+      console.log(`Retrying... (${retries} attempts left)`);
+      await delay(2000);
+      return fetchRestaurants(url, retries - 1);
+    }
     return [];
   }
+}
 
-  let results = data.results;
+function getTopRestaurants(restaurants: Restaurant[], limit: number = 10): Restaurant[] {
+  const filteredRestaurants = restaurants.filter(restaurant => 
+    restaurant.rating >= 4.5 && restaurant.user_ratings_total >= 100
+  );
 
-  if (data.next_page_token) {
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    const nextPageUrl = `${url}&pagetoken=${data.next_page_token}`;
-    const nextPageResults = await fetchRestaurants(nextPageUrl);
-    results = results.concat(nextPageResults);
-  }
+  const maxReviews = Math.max(...filteredRestaurants.map(r => r.user_ratings_total));
 
-  return results;
+  const scoredRestaurants = filteredRestaurants.map(restaurant => ({
+    ...restaurant,
+    score: (restaurant.rating * 0.7) + ((restaurant.user_ratings_total / maxReviews) * 0.3)
+  }));
+
+  return scoredRestaurants
+    .sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      return b.user_ratings_total - a.user_ratings_total;
+    })
+    .slice(0, limit);
 }
 
 export async function updateRestaurants() {
@@ -50,48 +113,44 @@ export async function updateRestaurants() {
     return;
   }
 
+  console.log('Using API key:', apiKey.substring(0, 5) + '...' + apiKey.substring(apiKey.length - 5));
+
   for (const [city, coordinates] of Object.entries(cityCoordinates)) {
-    console.log(`Updating restaurants for ${city}`);
+    console.log(`Updating top halal restaurants for ${city}`);
     const { lat, lng } = coordinates;
-    const baseUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&type=restaurant&keyword=halal&key=${apiKey}&rankby=prominence`;
+    const baseUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&type=restaurant&keyword=halal+restaurant&key=${apiKey}&rankby=prominence&radius=10000`;
 
-    const radii = [1000, 5000, 10000, 20000];
-    let allResults: any[] = [];
+    try {
+      const allResults = await fetchRestaurants(baseUrl);
+      console.log(`Found ${allResults.length} halal restaurants in ${city}`);
+      const topRestaurants = getTopRestaurants(allResults);
+      console.log(`Selected top ${topRestaurants.length} restaurants for ${city} (rating >= 4.5, 100+ reviews)`);
 
-    for (const radius of radii) {
-      const url = `${baseUrl}&radius=${radius}`;
-      const results = await fetchRestaurants(url);
-      allResults = allResults.concat(results);
-    }
-
-    const uniqueResults = Array.from(new Map(allResults.map(item => [item.place_id, item])).values());
-
-    for (const restaurant of uniqueResults) {
-      await sql.query(`
-        INSERT INTO restaurants (place_id, name, vicinity, lat, lng, rating, user_ratings_total, city)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT (place_id) 
-        DO UPDATE SET 
-          name = EXCLUDED.name,
-          vicinity = EXCLUDED.vicinity,
-          lat = EXCLUDED.lat,
-          lng = EXCLUDED.lng,
-          rating = EXCLUDED.rating,
-          user_ratings_total = EXCLUDED.user_ratings_total,
-          updated_at = CURRENT_TIMESTAMP
-      `, [
-        restaurant.place_id,
-        restaurant.name,
-        restaurant.vicinity,
-        restaurant.geometry.location.lat,
-        restaurant.geometry.location.lng,
-        restaurant.rating,
-        restaurant.user_ratings_total,
-        city
-      ]);
+      for (const restaurant of topRestaurants) {
+        try {
+          await sql`
+            INSERT INTO restaurants (place_id, name, vicinity, lat, lng, rating, user_ratings_total, city)
+            VALUES (${restaurant.place_id}, ${restaurant.name}, ${restaurant.vicinity}, ${restaurant.geometry.location.lat}, ${restaurant.geometry.location.lng}, ${restaurant.rating}, ${restaurant.user_ratings_total}, ${city})
+            ON CONFLICT (place_id) 
+            DO UPDATE SET 
+              name = EXCLUDED.name,
+              vicinity = EXCLUDED.vicinity,
+              lat = EXCLUDED.lat,
+              lng = EXCLUDED.lng,
+              rating = EXCLUDED.rating,
+              user_ratings_total = EXCLUDED.user_ratings_total,
+              updated_at = CURRENT_TIMESTAMP
+          `;
+          console.log(`Upserted restaurant: ${restaurant.name}`);
+        } catch (error) {
+          console.error(`Error inserting/updating restaurant ${restaurant.name}:`, error);
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching restaurants for ${city}:`, error);
     }
   }
 
-  console.log('Restaurant data update completed');
+  console.log('Top halal restaurant data update completed');
 }
 
